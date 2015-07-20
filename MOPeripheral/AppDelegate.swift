@@ -20,7 +20,7 @@ public class AppDelegate: UIResponder, UIApplicationDelegate, NSNetServiceBrowse
     var serverAddresses : [NSData]?
     //the socket that will be used to connect to the core app
     var asyncSocket : GCDAsyncSocket?
-
+    var coreSocket : GCDAsyncSocket?
 
     public func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
         //create the browser, it will look for the core
@@ -29,6 +29,9 @@ public class AppDelegate: UIResponder, UIApplicationDelegate, NSNetServiceBrowse
         netServiceBrowser?.delegate = self
         //start searching for services
         netServiceBrowser?.searchForServicesOfType("_m-o._tcp.", inDomain: "local.")
+
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: "handle:", name: "tap", object: nil)
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: "handle:", name: "longpress", object: nil)
         return true
     }
 
@@ -136,17 +139,44 @@ public class AppDelegate: UIResponder, UIApplicationDelegate, NSNetServiceBrowse
 
     public func socket(sock: GCDAsyncSocket!, didConnectToHost host: String!, port: UInt16) {
         println(__FUNCTION__)
-        writeTo(sock, message: "handshake-from-peripheral")
+        coreSocket = sock
+        writeTo(coreSocket!, message: "handshake-from-peripheral")
     }
 
     public func socket(sock: GCDAsyncSocket!, didReadData data: NSData!, withTag tag: Int) {
         //extracts the data, converts it to a string
-        let message = NSString(data: data, encoding: NSUTF8StringEncoding)
-        println("\(__FUNCTION__) message: \(message)")
+        if let message = NSString(data: data, encoding: NSUTF8StringEncoding) {
+            println("\(__FUNCTION__) message: \(message)")
+        }
+        coreSocket?.readDataWithTimeout(-1, tag: 0)
     }
 
     public func socket(sock: GCDAsyncSocket!, didWriteDataWithTag tag: Int) {
         println(__FUNCTION__)
     }
-}
 
+    func handle(notification: NSNotification) {
+        //checks to see if the notification is down or dragged
+        if notification.name == "tap" || notification.name == "longpress" {
+            //if so, attempt to convert the notification's userInfo into a dictionary with the right types
+            if let info = notification.userInfo as? Dictionary<String,String> {
+                //check to see if the "event" actually exists
+                if let location = info["location"],
+                    let state = info["state"] {
+                        relayGesture("\(notification.name)|\(location)|\(state.toInt())|")
+                }
+                else {
+                    println("no value for 'event'")
+                }
+            } else {
+                println("wrong userInfo type")
+            }
+        }
+    }
+
+    func relayGesture(message: String) {
+        if let sock = coreSocket {
+            writeTo(sock, message: message)
+        }
+    }
+}
