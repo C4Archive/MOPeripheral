@@ -22,6 +22,12 @@ public class AppDelegate: UIResponder, UIApplicationDelegate, NSNetServiceBrowse
     var asyncSocket : GCDAsyncSocket?
     var coreSocket : GCDAsyncSocket?
 
+    var timeServiceBrowser : NSNetServiceBrowser?
+    var timeService : NSNetService?
+    var timeServerAddresses : [NSData]?
+    var timeSocket : GCDAsyncSocket?
+    var coreTimeSocket : GCDAsyncSocket?
+
     public func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
         //create the browser, it will look for the core
         netServiceBrowser = NSNetServiceBrowser()
@@ -32,6 +38,12 @@ public class AppDelegate: UIResponder, UIApplicationDelegate, NSNetServiceBrowse
 
         NSNotificationCenter.defaultCenter().addObserver(self, selector: "handle:", name: "tap", object: nil)
         NSNotificationCenter.defaultCenter().addObserver(self, selector: "handle:", name: "longpress", object: nil)
+
+        timeServiceBrowser = NSNetServiceBrowser()
+        //set its delegate
+        timeServiceBrowser?.delegate = self
+        //start searching for services
+        timeServiceBrowser?.searchForServicesOfType("_m-o-time._tcp.", inDomain: "local.")
         return true
     }
 
@@ -42,13 +54,24 @@ public class AppDelegate: UIResponder, UIApplicationDelegate, NSNetServiceBrowse
     public func netServiceBrowser(aNetServiceBrowser: NSNetServiceBrowser, didFindService aNetService: NSNetService, moreComing: Bool) {
         println(__FUNCTION__)
 
-        if coreService != nil {
-            coreService?.stop()
-            coreService?.delegate =  nil
+        if aNetService.name == "m-o-core-service" {
+            if coreService != nil {
+                coreService?.stop()
+                coreService?.delegate =  nil
+            }
+            coreService = aNetService;
+            coreService?.delegate = self
+            coreService?.resolveWithTimeout(5.0)
+        } else if aNetService.name == "m-o-time-service" {
+            if timeService != nil {
+                timeService?.stop()
+                timeService?.delegate =  nil
+            }
+            timeService = aNetService;
+            timeService?.delegate = self
+            timeService?.resolveWithTimeout(5.0)
         }
-        coreService = aNetService;
-        coreService?.delegate = self
-        coreService?.resolveWithTimeout(5.0)
+
     }
     public func netServiceBrowser(aNetServiceBrowser: NSNetServiceBrowser, didNotSearch errorDict: [NSObject : AnyObject]) {
         println("\(__FUNCTION__) error: \(errorDict)")
@@ -73,31 +96,59 @@ public class AppDelegate: UIResponder, UIApplicationDelegate, NSNetServiceBrowse
     public func netServiceDidResolveAddress(sender: NSNetService) {
         println(__FUNCTION__)
 
-        //if there are any addresses left over from a previous connection
-        if serverAddresses != nil {
-            //remove them
-            serverAddresses?.removeAll(keepCapacity: false)
-        } else {
-            //otherwise, create a new array to hold incoming addresses
-            serverAddresses = [NSData]()
+        if sender.name == "m-o-core-service" {
+            //if there are any addresses left over from a previous connection
+            if serverAddresses != nil {
+                //remove them
+                serverAddresses?.removeAll(keepCapacity: false)
+            } else {
+                //otherwise, create a new array to hold incoming addresses
+                serverAddresses = [NSData]()
+            }
+
+            //if the net service that was found has addresses
+            if let count = sender.addresses?.count,
+                //and the addresses are not nil (i.e. we can extract them)
+                let addresses = sender.addresses as? [NSData] {
+                    //then cycle through all the addresses and append them to the local array
+                    for i in 0..<count {
+                        serverAddresses?.append(addresses[i])
+                    }
+            }
+
+            //create a new socket if it hasn't yet been created
+            if (asyncSocket == nil) {
+                asyncSocket = GCDAsyncSocket(delegate: self, delegateQueue: dispatch_get_main_queue())
+            }
+            connectToNextAddress()
+        } else if sender.name == "m-o-time-service" {
+            //if there are any addresses left over from a previous connection
+            if timeServerAddresses != nil {
+                //remove them
+                timeServerAddresses?.removeAll(keepCapacity: false)
+            } else {
+                //otherwise, create a new array to hold incoming addresses
+                timeServerAddresses = [NSData]()
+            }
+
+            //if the net service that was found has addresses
+            if let count = sender.addresses?.count,
+                //and the addresses are not nil (i.e. we can extract them)
+                let addresses = sender.addresses as? [NSData] {
+                    //then cycle through all the addresses and append them to the local array
+                    for i in 0..<count {
+                        timeServerAddresses?.append(addresses[i])
+                    }
+            }
+
+            //create a new socket if it hasn't yet been created
+            if (timeSocket == nil) {
+                timeSocket = GCDAsyncSocket(delegate: self, delegateQueue: dispatch_get_main_queue())
+            }
+            connectToNextTimeAddress()
         }
 
-        //if the net service that was found has addresses
-        if let count = sender.addresses?.count,
-            //and the addresses are not nil (i.e. we can extract them)
-            let addresses = sender.addresses as? [NSData] {
-                //then cycle through all the addresses and append them to the local array
-                for i in 0..<count {
-                    serverAddresses?.append(addresses[i])
-                }
-        }
 
-        //create a new socket if it hasn't yet been created
-        if (asyncSocket == nil) {
-            asyncSocket = GCDAsyncSocket(delegate: self, delegateQueue: dispatch_get_main_queue())
-        }
-
-        connectToNextAddress()
     }
 
     public func connectToNextAddress() {
@@ -115,6 +166,27 @@ public class AppDelegate: UIResponder, UIApplicationDelegate, NSNetServiceBrowse
             //try connecting to the first address
             var error : NSError?
             if let response = asyncSocket?.connectToAddress(address , error: &error) {
+                //if the socket connects, mark done
+                done = response
+            }
+        }
+    }
+
+    public func connectToNextTimeAddress() {
+        println(__FUNCTION__)
+        //variable representing the socket's attempt to connect to an address
+        var done = false
+
+        //loop through all the addresses until we either run out, or have connected to one of them
+        while !done && timeServerAddresses?.count > 0 {
+            //grab the first address
+            var address = timeServerAddresses?[0]
+            //remove it from the list
+            timeServerAddresses?.removeAtIndex(0)
+
+            //try connecting to the first address
+            var error : NSError?
+            if let response = timeSocket?.connectToAddress(address , error: &error) {
                 //if the socket connects, mark done
                 done = response
             }
@@ -139,16 +211,28 @@ public class AppDelegate: UIResponder, UIApplicationDelegate, NSNetServiceBrowse
 
     public func socket(sock: GCDAsyncSocket!, didConnectToHost host: String!, port: UInt16) {
         println(__FUNCTION__)
-        coreSocket = sock
-        writeTo(coreSocket!, message: "handshake-from-peripheral")
+        println(sock.connectedPort)
+        if sock.connectedPort == 1111 {
+            timeSocket = sock
+            writeTo(timeSocket!, message: "handshake-from-peripheral (time)")
+        } else {
+            coreSocket = sock
+            writeTo(coreSocket!, message: "handshake-from-peripheral (default)")
+        }
+
     }
 
     public func socket(sock: GCDAsyncSocket!, didReadData data: NSData!, withTag tag: Int) {
+
         //extracts the data, converts it to a string
         if let message = NSString(data: data, encoding: NSUTF8StringEncoding) {
             println("\(__FUNCTION__) message: \(message)")
+            if sock == timeSocket {
+                timeSocket?.readDataWithTimeout(-1, tag: 1)
+            } else {
+                coreSocket?.readDataWithTimeout(-1, tag: 0)
+            }
         }
-        coreSocket?.readDataWithTimeout(-1, tag: 0)
     }
 
     public func socket(sock: GCDAsyncSocket!, didWriteDataWithTag tag: Int) {
