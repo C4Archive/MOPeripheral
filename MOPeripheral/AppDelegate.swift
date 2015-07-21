@@ -223,11 +223,12 @@ public class AppDelegate: UIResponder, UIApplicationDelegate, NSNetServiceBrowse
     }
 
     public func socket(sock: GCDAsyncSocket!, didReadData data: NSData!, withTag tag: Int) {
-
+        let modData = data.subdataWithRange(NSMakeRange(0, data.length-2))
         //extracts the data, converts it to a string
-        if let message = NSString(data: data, encoding: NSUTF8StringEncoding) {
+        if let message = NSString(data: modData, encoding: NSUTF8StringEncoding) {
             println("\(__FUNCTION__) message: \(message)")
             if sock == timeSocket {
+                vc?.label.text = message as? String
                 timeSocket?.readDataWithTimeout(-1, tag: 1)
             } else {
                 coreSocket?.readDataWithTimeout(-1, tag: 0)
