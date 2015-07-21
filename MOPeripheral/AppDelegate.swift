@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import C4
 
 @UIApplicationMain
 public class AppDelegate: UIResponder, UIApplicationDelegate, NSNetServiceBrowserDelegate, NSNetServiceDelegate, GCDAsyncSocketDelegate {
@@ -27,6 +28,8 @@ public class AppDelegate: UIResponder, UIApplicationDelegate, NSNetServiceBrowse
     var timeServerAddresses : [NSData]?
     var timeSocket : GCDAsyncSocket?
     var coreTimeSocket : GCDAsyncSocket?
+    
+    var vc : ViewController?
 
     public func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
         //create the browser, it will look for the core
@@ -44,6 +47,8 @@ public class AppDelegate: UIResponder, UIApplicationDelegate, NSNetServiceBrowse
         timeServiceBrowser?.delegate = self
         //start searching for services
         timeServiceBrowser?.searchForServicesOfType("_m-o-time._tcp.", inDomain: "local.")
+        
+        vc = window?.rootViewController as? ViewController
         return true
     }
 

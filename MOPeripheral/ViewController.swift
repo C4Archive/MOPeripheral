@@ -9,9 +9,11 @@
 import UIKit
 import C4
 
-class ViewController: C4CanvasController {
-
-    override func setup() {
+public class ViewController: C4CanvasController {
+    public var label = UILabel()
+    
+    public override func setup() {
+        label.frame = view.frame
         //adds a tap gesture recognizer to the main canvas
         canvas.addTapGestureRecognizer { (location, state) -> () in
             //posts a notification with the name "tap"
@@ -22,6 +24,8 @@ class ViewController: C4CanvasController {
             //posts a notification with the name "longpress"
             NSNotificationCenter.defaultCenter().postNotificationName("longpress", object: self, userInfo: ["location":"\(location)", "state" : "\(state.rawValue)"])
         }
+        
+        canvas.add(label)
     }
 }
 
