@@ -16,6 +16,7 @@
 		1F6B2ACC1B59F1E4005FB79D /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1F6B2ACA1B59F1E4005FB79D /* LaunchScreen.xib */; };
 		1F6B2AD81B59F1E4005FB79D /* MOPeripheralTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6B2AD71B59F1E4005FB79D /* MOPeripheralTests.swift */; };
 		1F6B2AE41B59F8AC005FB79D /* GCDAsyncSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 1F6B2AE31B59F8AC005FB79D /* GCDAsyncSocket.m */; };
+		D943D3541B60208800DE7DB0 /* SocketManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D943D3531B60208800DE7DB0 /* SocketManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -85,6 +86,7 @@
 		1F6B2AE11B59F8AB005FB79D /* MOPeripheral-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "MOPeripheral-Bridging-Header.h"; sourceTree = "<group>"; };
 		1F6B2AE21B59F8AC005FB79D /* GCDAsyncSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GCDAsyncSocket.h; sourceTree = "<group>"; };
 		1F6B2AE31B59F8AC005FB79D /* GCDAsyncSocket.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GCDAsyncSocket.m; sourceTree = "<group>"; };
+		D943D3531B60208800DE7DB0 /* SocketManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SocketManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -138,6 +140,7 @@
 			isa = PBXGroup;
 			children = (
 				1F6B2AC11B59F1E4005FB79D /* AppDelegate.swift */,
+				D943D3531B60208800DE7DB0 /* SocketManager.swift */,
 				1F6B2AC31B59F1E4005FB79D /* ViewController.swift */,
 				1F6B2AE21B59F8AC005FB79D /* GCDAsyncSocket.h */,
 				1F6B2AE31B59F8AC005FB79D /* GCDAsyncSocket.m */,
@@ -310,6 +313,7 @@
 			files = (
 				1F6B2AE41B59F8AC005FB79D /* GCDAsyncSocket.m in Sources */,
 				1F6B2AC41B59F1E4005FB79D /* ViewController.swift in Sources */,
+				D943D3541B60208800DE7DB0 /* SocketManager.swift in Sources */,
 				1F6B2AC21B59F1E4005FB79D /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
