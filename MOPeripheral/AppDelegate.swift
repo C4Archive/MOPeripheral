@@ -9,10 +9,10 @@
 import UIKit
 
 @UIApplicationMain
-public class AppDelegate: UIResponder, UIApplicationDelegate, NSNetServiceBrowserDelegate, NSNetServiceDelegate, GCDAsyncSocketDelegate {
+public class AppDelegate: UIResponder, UIApplicationDelegate {
     //default iOS, needs to be here
     public var window: UIWindow?
-    public var socketManager = SocketManager()
+    public var socketManager = PeripheralSocketManager()
 
     public func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
         socketManager.startSearching()

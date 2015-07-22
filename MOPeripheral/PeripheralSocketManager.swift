@@ -1,5 +1,5 @@
 //
-//  SocketManager.swift
+//  PeripheralSocketManager.swift
 //  MOPeripheral
 //
 //  Created by travis on 2015-07-22.
@@ -9,7 +9,7 @@
 import Foundation
 import C4
 
-public class SocketManager : NSObject, NSNetServiceBrowserDelegate, NSNetServiceDelegate, GCDAsyncSocketDelegate {
+public class PeripheralSocketManager : NSObject, NSNetServiceBrowserDelegate, NSNetServiceDelegate, GCDAsyncSocketDelegate {
     //the browser will look for the core
     public var netServiceBrowser : NSNetServiceBrowser?
     //a variable to store a local version of the core's service
