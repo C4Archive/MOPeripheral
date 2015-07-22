@@ -10,17 +10,21 @@ import UIKit
 import C4
 
 class ViewController: C4CanvasController {
-
+    var line = C4Line([C4Point(),C4Point()])
     override func setup() {
-        //adds a tap gesture recognizer to the main canvas
-        canvas.addTapGestureRecognizer { (location, state) -> () in
-            //posts a notification with the name "tap"
-            NSNotificationCenter.defaultCenter().postNotificationName("tap", object: self, userInfo: ["location":"\(location)", "state" : "\(state.rawValue)"])
+        line.b = C4Point(canvas.width,0)
+        line.center = canvas.center
+        line.lineDashPattern = [canvas.width + 10, 10, 1,10]
+        canvas.add(line)
+        
+        let anim = C4ViewAnimation(duration: 1.0) {
+            self.line.lineDashPhase = self.canvas.width + 20
         }
-        //adds a longpress gesture recognizer to the main canvas
-        canvas.addLongPressGestureRecognizer { (location, state) -> () in
-            //posts a notification with the name "longpress"
-            NSNotificationCenter.defaultCenter().postNotificationName("longpress", object: self, userInfo: ["location":"\(location)", "state" : "\(state.rawValue)"])
+        
+        anim.repeats = true
+        
+        delay(1.0) {
+            anim.animate()
         }
     }
 }
